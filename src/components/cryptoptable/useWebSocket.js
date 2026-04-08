@@ -4,6 +4,7 @@ function useWebSocket() {
   const [Connection, setConnection] = useState(false);
   const [update, setupdate] = useState([]);
   const socketRef = useRef(null);
+  const valueRef = useRef(null);
 
   useEffect(() => {
     let socket = new WebSocket("wss://advanced-trade-ws.coinbase.com");
@@ -20,21 +21,24 @@ function useWebSocket() {
       );
     };
     socket.onmessage = (event) => {
-      const newData = JSON.parse(event.data);
-      console.log("Получены данные:", newData);
-      setupdate(newData);
+      valueRef.current = JSON.parse(event.data);
     };
+
+    //Обновляем UI раз в 1с, чтобы не было перегрузок
+    const intervalId = setInterval(() => {
+      setupdate(valueRef.current);
+    }, 1000);
+
     socket.onerror = (error) => {
       console.log("Ошибка", error);
     };
+
     return () => {
-      console.log("readyState:", socket.readyState);
+      clearInterval(intervalId);
       if (
         socketRef.current &&
         socketRef.current.readyState === WebSocket.OPEN
       ) {
-        console.log("readyState:", socket.readyState);
-        console.log("ref:", socketRef.current);
         socketRef.current.close();
       }
     };
