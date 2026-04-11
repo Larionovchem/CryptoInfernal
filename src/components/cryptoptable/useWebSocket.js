@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
+import { useCryptoStore } from "../useCryptoStore";
+import { mapSocketData } from "../utils/mapper";
 
 function useWebSocket() {
-  const [Connection, setConnection] = useState(false);
-  const [update, setupdate] = useState([]);
+  const { connectionStatus, setConnectionStatus, updateCoin, coins } =
+    useCryptoStore();
   const socketRef = useRef(null);
   const valueRef = useRef(null);
 
@@ -11,7 +13,7 @@ function useWebSocket() {
     socketRef.current = socket;
 
     socket.onopen = () => {
-      setConnection(true);
+      setConnectionStatus("open");
       socket.send(
         JSON.stringify({
           type: "subscribe",
@@ -21,32 +23,33 @@ function useWebSocket() {
       );
     };
     socket.onmessage = (event) => {
-      valueRef.current = JSON.parse(event.data);
+      valueRef.current = mapSocketData(JSON.parse(event.data));
+      console.log(valueRef.current);
+      // if(valueRef.current)
     };
 
     //Обновляем UI раз в 1с, чтобы не было перегрузок
     const intervalId = setInterval(() => {
-      setupdate(valueRef.current);
+      if (valueRef.current != null)
+        updateCoin(valueRef.current.symbol, valueRef.current.data);
     }, 1000);
 
     socket.onerror = (error) => {
       console.log("Ошибка", error);
+      setConnectionStatus("error");
     };
 
     return () => {
       clearInterval(intervalId);
-      if (
-        socketRef.current &&
-        socketRef.current.readyState === WebSocket.OPEN
-      ) {
+      if (socketRef.current && socketRef.current.readyState == WebSocket.OPEN) {
         socketRef.current.close();
       }
     };
   }, []);
 
   return {
-    massage: update,
-    isConnection: Connection,
+    massage: coins,
+    isConnection: connectionStatus,
   };
 }
 
