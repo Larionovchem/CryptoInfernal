@@ -4,6 +4,7 @@ export const mapCoin = (coin) => {
     price: coin?.current_price,
     volume: coin?.total_volume,
     change24h: coin?.price_change_percentage_24h,
+    image: coin?.image,
   };
 };
 

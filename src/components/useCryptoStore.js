@@ -2,9 +2,10 @@ import { create } from "zustand";
 
 export const useCryptoStore = create((set) => ({
   coins: {},
-  connectionStatus: "connecting",
+  connectionStatusWebSocket: "connecting",
   setCoins: (data) => set({ coins: data }),
-  setConnectionStatus: (data) => set({ connectionStatus: data }),
+  setConnectionStatusWebSocket: (data) =>
+    set({ connectionStatusWebSocket: data }),
 
   updateCoin: (sym, particalData) =>
     set((state) => ({
